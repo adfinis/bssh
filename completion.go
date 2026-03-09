@@ -7,6 +7,7 @@ import (
 	"github.com/adfinis/bastion-go"
 	"github.com/adfinis/bssh/config"
 	"github.com/adfinis/bssh/otp"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
@@ -44,10 +45,24 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 	var hosts []string
 	for _, access := range accesses {
 		for _, acl := range access.ACL {
-			if _, ok := seen[acl.IP]; ok {
+			// skip protocl acls
+			if acl.User != nil && strings.HasPrefix(*acl.User, "!") {
 				continue
 			}
-			seen[acl.IP] = struct{}{}
+
+			aclkey := fmt.Sprintf("%s|%d|%s|%s|%d|%s",
+				acl.IP,
+				acl.Port.ValueInt(),
+				lo.FromPtr(acl.User),
+				lo.FromPtr(acl.ProxyIP),
+				acl.ProxyPort.ValueInt(),
+				lo.FromPtr(acl.ProxyUser),
+			)
+
+			if _, ok := seen[aclkey]; ok {
+				continue
+			}
+			seen[aclkey] = struct{}{}
 
 			value := acl.IP
 			if acl.ProxyIP != nil && *acl.ProxyIP != "" {
@@ -61,9 +76,10 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 				value = fmt.Sprintf("%s -J %s", jump, acl.IP)
 			}
 
-			if acl.User != nil && (!strings.Contains(*acl.User, "*") ||
-				!strings.Contains(*acl.User, "?") ||
-				!strings.Contains(*acl.User, "!")) {
+			if acl.User != nil &&
+				!strings.Contains(*acl.User, "*") &&
+				!strings.Contains(*acl.User, "?") &&
+				!strings.Contains(*acl.User, "!") {
 				value = fmt.Sprintf("%s -l %s", value, *acl.User)
 			}
 
