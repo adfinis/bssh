@@ -114,11 +114,11 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 		if hosts[i].comment != hosts[j].comment {
 			return hosts[i].comment < hosts[j].comment
 		}
-		// IPv4 before IPv6
+		// IPv6 before IPv4
 		iIsV4 := net.ParseIP(hosts[i].ip) != nil && net.ParseIP(hosts[i].ip).To4() != nil
 		jIsV4 := net.ParseIP(hosts[j].ip) != nil && net.ParseIP(hosts[j].ip).To4() != nil
 		if iIsV4 != jIsV4 {
-			return iIsV4
+			return !iIsV4
 		}
 		return hosts[i].ip < hosts[j].ip
 	})
