@@ -50,12 +50,19 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 				continue
 			}
 
+			var portInt, proxyPortInt int
+			if acl.Port != nil {
+				portInt = acl.Port.ValueInt()
+			}
+			if acl.ProxyPort != nil {
+				proxyPortInt = acl.ProxyPort.ValueInt()
+			}
 			aclkey := fmt.Sprintf("%s|%d|%s|%s|%d|%s",
 				acl.IP,
-				acl.Port.ValueInt(),
+				portInt,
 				lo.FromPtr(acl.User),
 				lo.FromPtr(acl.ProxyIP),
-				acl.ProxyPort.ValueInt(),
+				proxyPortInt,
 				lo.FromPtr(acl.ProxyUser),
 			)
 
@@ -73,7 +80,7 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 				if acl.ProxyPort != nil && acl.ProxyPort.ValueInt() > 0 {
 					jump = fmt.Sprintf("%s:%d", jump, acl.ProxyPort.ValueInt())
 				}
-				value = fmt.Sprintf("%s -J %s", jump, acl.IP)
+				value = fmt.Sprintf("%s -J %s", acl.IP, jump)
 			}
 
 			if acl.User != nil &&
