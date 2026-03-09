@@ -42,6 +42,9 @@ var rootCmd = &cobra.Command{
 	Args:               cobra.ArbitraryArgs,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 	ValidArgsFunction:  completeHosts,
+	CompletionOptions: cobra.CompletionOptions{
+		HiddenDefaultCmd: true,
+	},
 	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		level, err := log.ParseLevel(rootCmdFlags.logLevel)
 		if err != nil {
