@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"net"
+	"sort"
 	"strings"
 
 	"github.com/adfinis/bastion-go"
@@ -41,8 +43,14 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 		return nil, cobra.ShellCompDirectiveError
 	}
 
+	type host struct {
+		ip      string
+		value   string
+		comment string
+	}
+
 	seen := make(map[string]struct{})
-	var hosts []string
+	var hosts []host
 	for _, access := range accesses {
 		for _, acl := range access.ACL {
 			// skip protocl acls
@@ -94,13 +102,35 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 				value = fmt.Sprintf("%s -p %d", value, acl.Port.ValueInt())
 			}
 
-			entry := value
-			if acl.UserComment != nil && *acl.UserComment != "" {
-				entry = fmt.Sprintf("%s\t%s", value, *acl.UserComment)
-			}
-			hosts = append(hosts, entry)
+			hosts = append(hosts, host{
+				ip:      acl.IP,
+				value:   value,
+				comment: lo.FromPtr(acl.UserComment),
+			})
 		}
 	}
 
-	return hosts, cobra.ShellCompDirectiveNoFileComp
+	sort.Slice(hosts, func(i, j int) bool {
+		if hosts[i].comment != hosts[j].comment {
+			return hosts[i].comment < hosts[j].comment
+		}
+		// IPv4 before IPv6
+		iIsV4 := net.ParseIP(hosts[i].ip) != nil && net.ParseIP(hosts[i].ip).To4() != nil
+		jIsV4 := net.ParseIP(hosts[j].ip) != nil && net.ParseIP(hosts[j].ip).To4() != nil
+		if iIsV4 != jIsV4 {
+			return iIsV4
+		}
+		return hosts[i].ip < hosts[j].ip
+	})
+
+	entries := make([]string, len(hosts))
+	for i, h := range hosts {
+		if h.comment != "" {
+			entries[i] = fmt.Sprintf("%s\t%s", h.value, h.comment)
+		} else {
+			entries[i] = h.value
+		}
+	}
+
+	return entries, cobra.ShellCompDirectiveNoFileComp | cobra.ShellCompDirectiveKeepOrder
 }
