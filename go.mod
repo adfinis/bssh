@@ -5,7 +5,7 @@ go 1.25.6
 require (
 	github.com/adfinis/bastion-go v0.3.0
 	github.com/adrg/xdg v0.5.3
-	github.com/charmbracelet/fang v0.4.4
+	github.com/charmbracelet/fang v1.0.0
 	github.com/charmbracelet/log v1.0.0
 	github.com/creack/pty v1.1.24
 	github.com/spf13/cobra v1.10.2
