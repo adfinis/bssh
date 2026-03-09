@@ -263,7 +263,8 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 			}
 
 			if acl.User != nil && (!strings.Contains(*acl.User, "*") ||
-				!strings.Contains(*acl.User, "?")) {
+				!strings.Contains(*acl.User, "?") ||
+				!strings.Contains(*acl.User, "!")) {
 				value = fmt.Sprintf("%s -l %s", value, *acl.User)
 			}
 
