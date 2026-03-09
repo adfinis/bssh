@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	// Version is the current version of adfinis-rclone-mgr.
+	// Version is the current version of bssh.
 	Version = "devel"
 	// Commit is the git commit hash of the current version.
 	Commit = "none"
