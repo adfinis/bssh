@@ -12,7 +12,6 @@ before:
 
 builds:
   - id: default
-    dir: ./cmd/bssh
     env:
       - CGO_ENABLED=0
     main: .
