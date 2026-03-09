@@ -267,7 +267,7 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 				value = fmt.Sprintf("%s -l %s", value, *acl.User)
 			}
 
-			if acl.Port != nil && acl.Port.ValueInt() > 0 {
+			if acl.Port != nil && acl.Port.ValueInt() > 0 && acl.Port.ValueInt() != 22 {
 				value = fmt.Sprintf("%s -p %d", value, acl.Port.ValueInt())
 			}
 
