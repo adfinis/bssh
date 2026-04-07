@@ -27,7 +27,7 @@ jobs:
       - name: Run tests
         run: go test -json ./... | go-ctrf-json-reporter -o test-results.json
       - name: Publish Test Report
-        uses: ctrf-io/github-test-reporter@1a5c600d1dc0f102d6492b747f34d45ed4d26eea # v1
+        uses: ctrf-io/github-test-reporter@0f299074936c32ccaab5be5230511f6b2b9080aa # v1
         with:
           report-path: test-results.json
           github-report: true
