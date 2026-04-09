@@ -8,6 +8,8 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Etc/UTC"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "github-actions"
     directory: "/"
     groups:
@@ -19,3 +21,5 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Etc/UTC"
+    cooldown:
+      default-days: 7
