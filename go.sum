@@ -1,7 +1,7 @@
 charm.land/lipgloss/v2 v2.0.4 h1:lcPeVtcp23SNra7lHy8iYE4UC2aIipVQ47sbGyyxR5Q=
 charm.land/lipgloss/v2 v2.0.4/go.mod h1:0653x8epbZSzdDfO/XPS1a/uYPOBeSsCssOpJOqDzik=
-github.com/adfinis/bastion-go v0.3.1 h1:VnapY7KD6PFP0rYssRl097FEXmnw9Xc1p2QWoqU5Fzc=
-github.com/adfinis/bastion-go v0.3.1/go.mod h1:DKd2qIcjULpCNBo8KkDUcvS7Z3WAUzR3rE+DdQIHul0=
+github.com/adfinis/bastion-go v0.4.0 h1:WLrgHlhW988ZITXAsPOB14Cjzura3D7zjpcwZve3jiA=
+github.com/adfinis/bastion-go v0.4.0/go.mod h1:LvSNksOFIbp1886m+6X1P8F18EzkWE5m8y7yYTBVgws=
 github.com/adrg/xdg v0.5.3 h1:xRnxJXne7+oWDatRhR1JLnvuccuIeCoBu2rtuLqQB78=
 github.com/adrg/xdg v0.5.3/go.mod h1:nlTsY+NNiCBGCK2tpm09vRqfVzrc2fLmXGpBLF0zlTQ=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
