@@ -8,6 +8,7 @@ import (
 
 	"github.com/adfinis/bastion-go"
 	"github.com/adfinis/bssh/config"
+	"github.com/adfinis/bssh/openbao"
 	"github.com/adfinis/bssh/otp"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
@@ -25,14 +26,23 @@ func completeHosts(_ *cobra.Command, args []string, _ string) ([]string, cobra.S
 		return nil, cobra.ShellCompDirectiveError
 	}
 
+	var authMethods []bastion.SSHAuthMethod
+	if cfg.OpenBao.Enabled {
+		authMethods = append(authMethods, openbao.WithAuth(cfg))
+	} else {
+		authMethods = append(authMethods, bastion.WithSSHAgentAuth())
+	}
+	if cfg.OTPEnabled {
+		authMethods = append(authMethods, otp.WithAuth(cfg))
+	}
+
 	client, err := bastion.New(
 		&bastion.Config{
 			Host:     cfg.Hostname,
 			Port:     cfg.Port,
 			Username: cfg.Username,
 		},
-		bastion.WithSSHAgentAuth(),
-		otp.WithAuth(cfg),
+		authMethods...,
 	)
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError

@@ -11,12 +11,28 @@ import (
 )
 
 type Config struct {
-	Username           string `mapstructure:"username"`
-	Hostname           string `mapstructure:"hostname"`
-	Port               int    `mapstructure:"port"`
-	SSHCommand         string `mapstructure:"ssh_command"`
-	OTPCallbackCommand string `mapstructure:"otp_callback_command"`
-	OTPShellCommand    string `mapstructure:"otp_shell_command"`
+	Username           string        `mapstructure:"username"`
+	Hostname           string        `mapstructure:"hostname"`
+	Port               int           `mapstructure:"port"`
+	SSHCommand         string        `mapstructure:"ssh_command"`
+	OTPEnabled         bool          `mapstructure:"otp_enabled"`
+	OTPCallbackCommand string        `mapstructure:"otp_callback_command"`
+	OTPShellCommand    string        `mapstructure:"otp_shell_command"`
+	OpenBao            OpenBaoConfig `mapstructure:"openbao"`
+}
+
+// OpenBaoConfig configures signing of an SSH key by an OpenBao SSH secrets
+// engine to obtain a short-lived certificate used to authenticate to the
+// bastion.
+type OpenBaoConfig struct {
+	Enabled    bool   `mapstructure:"enabled"`
+	Address    string `mapstructure:"address"`
+	MountPath  string `mapstructure:"mount_path"`
+	Role       string `mapstructure:"role"`
+	PublicKey  string `mapstructure:"public_key"`
+	PrivateKey string `mapstructure:"private_key"`
+	CertOutput string `mapstructure:"cert_output"`
+	TTL        string `mapstructure:"ttl"`
 }
 
 var v = viper.New()
@@ -72,6 +88,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("port", 22)
 	v.SetDefault("ssh_command", "ssh -t")
 	v.SetDefault("otp_shell_command", "/usr/bin/env bash -c")
+	v.SetDefault("openbao.mount_path", "ssh")
 }
 
 func validateConfig(c *Config) error {
@@ -87,20 +104,40 @@ func validateConfig(c *Config) error {
 		return fmt.Errorf("hostname is required in config")
 	}
 
-	if c.OTPCallbackCommand == "" {
-		return fmt.Errorf("otp_callback_command is required in config")
-	}
-
-	if c.OTPShellCommand == "" {
-		return fmt.Errorf("otp_shell_command is required in config")
-	}
-
 	if c.SSHCommand == "" {
 		return fmt.Errorf("ssh_command is required in config")
 	}
 
 	if c.Port <= 0 || c.Port > 65535 {
 		return fmt.Errorf("port must be between 1 and 65535")
+	}
+
+	if c.OTPEnabled {
+		if c.OTPCallbackCommand == "" {
+			return fmt.Errorf("otp_callback_command is required when otp_enabled is true")
+		}
+
+		if c.OTPShellCommand == "" {
+			return fmt.Errorf("otp_shell_command is required when otp_enabled is true")
+		}
+	}
+
+	if c.OpenBao.Enabled {
+		if c.OpenBao.Address == "" {
+			return fmt.Errorf("openbao.address is required when openbao.enabled is true")
+		}
+
+		if c.OpenBao.MountPath == "" {
+			return fmt.Errorf("openbao.mount_path is required when openbao.enabled is true")
+		}
+
+		if c.OpenBao.Role == "" {
+			return fmt.Errorf("openbao.role is required when openbao.enabled is true")
+		}
+
+		if c.OpenBao.PublicKey == "" {
+			return fmt.Errorf("openbao.public_key is required when openbao.enabled is true")
+		}
 	}
 
 	return nil
