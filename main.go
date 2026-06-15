@@ -13,12 +13,14 @@ import (
 	"time"
 
 	"github.com/adfinis/bssh/config"
+	"github.com/adfinis/bssh/openbao"
 	"github.com/adfinis/bssh/otp"
 	"github.com/charmbracelet/fang"
 	"github.com/charmbracelet/log"
 	"github.com/creack/pty"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	"golang.org/x/term"
 )
 
@@ -55,6 +57,12 @@ var rootCmd = &cobra.Command{
 	Run: root,
 }
 
+func mustBindPFlag(v *viper.Viper, name string, flag *pflag.Flag) {
+	if err := v.BindPFlag(name, flag); err != nil {
+		log.Fatal("Failed to bind flag", "name", name, "error", err)
+	}
+}
+
 func init() {
 	rootCmd.Flags().StringVarP(&rootCmdFlags.configPath, "config", "c", "", "Path to config file")
 	rootCmd.Flags().StringVar(&rootCmdFlags.logLevel, "log-level", "info", "Log level (debug, info, warn, error, fatal)")
@@ -63,16 +71,34 @@ func init() {
 	rootCmd.Flags().String("hostname", "", "SSH hostname")
 	rootCmd.Flags().Int("port", 0, "SSH port")
 	rootCmd.Flags().String("ssh-command", "", "SSH command (default \"ssh -t\")")
+	rootCmd.Flags().Bool("otp-enabled", false, "Enable OTP callback")
 	rootCmd.Flags().String("otp-callback-command", "", "Command to obtain OTP code")
 	rootCmd.Flags().String("otp-shell-command", "", "Shell command to run OTP callback (default \"/usr/bin/env bash -c\")")
+	rootCmd.Flags().Bool("openbao-enabled", false, "Sign an SSH key with the OpenBao SSH engine and use the certificate to log in")
+	rootCmd.Flags().String("openbao-address", "", "OpenBao server address (URL)")
+	rootCmd.Flags().String("openbao-mount-path", "", "OpenBao SSH engine mount path (default \"ssh\")")
+	rootCmd.Flags().String("openbao-role", "", "OpenBao SSH engine role used to sign the key")
+	rootCmd.Flags().String("openbao-public-key", "", "Path to the SSH public key to sign")
+	rootCmd.Flags().String("openbao-private-key", "", "Path to the matching SSH private key (default: public key without .pub)")
+	rootCmd.Flags().String("openbao-cert-output", "", "Path to write the signed certificate (default: temporary file)")
+	rootCmd.Flags().String("openbao-ttl", "5m", "TTL for OpenBao-signed certificates (default 5m)")
 
 	v := config.GetViper()
-	_ = v.BindPFlag("username", rootCmd.Flags().Lookup("username"))
-	_ = v.BindPFlag("hostname", rootCmd.Flags().Lookup("hostname"))
-	_ = v.BindPFlag("port", rootCmd.Flags().Lookup("port"))
-	_ = v.BindPFlag("ssh_command", rootCmd.Flags().Lookup("ssh-command"))
-	_ = v.BindPFlag("otp_callback_command", rootCmd.Flags().Lookup("otp-callback-command"))
-	_ = v.BindPFlag("otp_shell_command", rootCmd.Flags().Lookup("otp-shell-command"))
+	mustBindPFlag(v, "username", rootCmd.Flags().Lookup("username"))
+	mustBindPFlag(v, "hostname", rootCmd.Flags().Lookup("hostname"))
+	mustBindPFlag(v, "port", rootCmd.Flags().Lookup("port"))
+	mustBindPFlag(v, "ssh_command", rootCmd.Flags().Lookup("ssh-command"))
+	mustBindPFlag(v, "otp_enabled", rootCmd.Flags().Lookup("otp-enabled"))
+	mustBindPFlag(v, "otp_callback_command", rootCmd.Flags().Lookup("otp-callback-command"))
+	mustBindPFlag(v, "otp_shell_command", rootCmd.Flags().Lookup("otp-shell-command"))
+	mustBindPFlag(v, "openbao.enabled", rootCmd.Flags().Lookup("openbao-enabled"))
+	mustBindPFlag(v, "openbao.address", rootCmd.Flags().Lookup("openbao-address"))
+	mustBindPFlag(v, "openbao.mount_path", rootCmd.Flags().Lookup("openbao-mount-path"))
+	mustBindPFlag(v, "openbao.role", rootCmd.Flags().Lookup("openbao-role"))
+	mustBindPFlag(v, "openbao.public_key", rootCmd.Flags().Lookup("openbao-public-key"))
+	mustBindPFlag(v, "openbao.private_key", rootCmd.Flags().Lookup("openbao-private-key"))
+	mustBindPFlag(v, "openbao.cert_output", rootCmd.Flags().Lookup("openbao-cert-output"))
+	mustBindPFlag(v, "openbao.ttl", rootCmd.Flags().Lookup("openbao-ttl"))
 }
 
 func main() {
@@ -129,11 +155,38 @@ func root(cmd *cobra.Command, _ []string) {
 		"hostname", cfg.Hostname,
 		"port", cfg.Port,
 		"ssh_command", cfg.SSHCommand,
+		"otp_enabled", cfg.OTPEnabled,
 		"otp_shell_command", cfg.OTPShellCommand,
 		"otp_callback_command", cfg.OTPCallbackCommand,
+		"openbao_enabled", cfg.OpenBao.Enabled,
 	)
 
 	sshParts := strings.Fields(cfg.SSHCommand)
+
+	if cfg.OpenBao.Enabled {
+		log.Debug("Signing SSH key with OpenBao",
+			"address", cfg.OpenBao.Address,
+			"mount_path", cfg.OpenBao.MountPath,
+			"role", cfg.OpenBao.Role,
+			"public_key", cfg.OpenBao.PublicKey,
+		)
+		signed, err := openbao.Sign(cfg)
+		if err != nil {
+			log.Fatal("Failed to sign SSH key with OpenBao", "error", err)
+		}
+		certPath, cleanup, err := signed.Write(cfg)
+		if err != nil {
+			log.Fatal("Failed to write signed certificate", "error", err)
+		}
+		defer cleanup()
+		log.Debug("SSH key signed", "certificate", certPath, "identity", signed.PrivateKey)
+		sshParts = append(sshParts,
+			"-o", "CertificateFile="+certPath,
+			"-o", "IdentityFile="+signed.PrivateKey,
+			"-o", "IdentitiesOnly=yes",
+		)
+	}
+
 	sshParts = append(sshParts, fmt.Sprintf("%s@%s", cfg.Username, cfg.Hostname), "--")
 	sshParts = append(sshParts, unknownArgs...)
 	log.Debug("SSH command", "parts", sshParts)
@@ -178,7 +231,9 @@ func root(cmd *cobra.Command, _ []string) {
 func handleOutput(ptmx *os.File, cfg *config.Config) {
 	buf := make([]byte, 4096)
 	var acc bytes.Buffer
-	otpDone := false
+	// When OTP is disabled, treat it as already handled so the prompt is never
+	// watched for and no callback is invoked.
+	otpDone := !cfg.OTPEnabled
 	deadline := time.Now().Add(10 * time.Second)
 	callback := otp.NewCallback(cfg)
 
