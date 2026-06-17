@@ -1,7 +1,9 @@
 package openbao
 
 import (
+	"bytes"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +12,7 @@ import (
 	"github.com/adfinis/bssh/config"
 	bao "github.com/openbao/openbao/api/v2"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 // SignedCert is the result of signing an SSH key with the OpenBao SSH engine.
@@ -107,7 +110,12 @@ func WithAuth(cfg *config.Config) bastion.SSHAuthMethod {
 		}
 		signer, err := ssh.ParsePrivateKey(keyBytes)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse private key %q: %w", signed.PrivateKey, err)
+			// Hardware-backed keys (e.g. FIDO/SK) cannot be parsed directly; fall back to the SSH agent.
+			var agentErr error
+			signer, agentErr = signerFromAgent(signed.PublicKey)
+			if agentErr != nil {
+				return nil, fmt.Errorf("failed to parse private key %q (%w); SSH agent fallback also failed: %v", signed.PrivateKey, err, agentErr)
+			}
 		}
 
 		pub, _, _, _, err := ssh.ParseAuthorizedKey([]byte(signed.Certificate))
@@ -125,6 +133,49 @@ func WithAuth(cfg *config.Config) bastion.SSHAuthMethod {
 		}
 		return ssh.PublicKeys(certSigner), nil
 	}
+}
+
+// signerFromAgent connects to the SSH agent via SSH_AUTH_SOCK and returns the
+// signer whose public key matches the key file at pubKeyPath. This is used as
+// a fallback for hardware-backed keys (e.g. FIDO/SK) that cannot be parsed
+// directly by ssh.ParsePrivateKey.
+func signerFromAgent(pubKeyPath string) (ssh.Signer, error) {
+	pubBytes, err := os.ReadFile(pubKeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read public key %q: %w", pubKeyPath, err)
+	}
+	pub, _, _, _, err := ssh.ParseAuthorizedKey(pubBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse public key %q: %w", pubKeyPath, err)
+	}
+
+	sock := os.Getenv("SSH_AUTH_SOCK")
+	if sock == "" {
+		return nil, fmt.Errorf("SSH_AUTH_SOCK is not set")
+	}
+	conn, err := net.Dial("unix", sock)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to SSH agent: %w", err)
+	}
+	// conn is intentionally not closed on success; the returned signer holds a
+	// reference to the agent client and signing would fail if the connection
+	// were closed prematurely.
+
+	ag := agent.NewClient(conn)
+	signers, err := ag.Signers()
+	if err != nil {
+		_ = conn.Close() //nolint:errcheck
+		return nil, fmt.Errorf("failed to list SSH agent keys: %w", err)
+	}
+
+	want := pub.Marshal()
+	for _, s := range signers {
+		if bytes.Equal(s.PublicKey().Marshal(), want) {
+			return s, nil
+		}
+	}
+	_ = conn.Close() //nolint:errcheck
+	return nil, fmt.Errorf("key %q not found in SSH agent (run ssh-add to load it)", pubKeyPath)
 }
 
 // newClient builds an OpenBao API client using the configured address and a
