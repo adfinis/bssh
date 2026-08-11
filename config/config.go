@@ -44,7 +44,7 @@ func GetViper() *viper.Viper {
 func init() {
 	setDefaults(v)
 	v.SetConfigType("yaml")
-	v.SetEnvPrefix("BSSH")
+	v.SetEnvPrefix("ADFSSH")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 }
@@ -56,8 +56,8 @@ func Load(path string) (*Config, error) {
 	} else {
 		v.SetConfigName("config")
 		v.AddConfigPath(".")
-		v.AddConfigPath(filepath.Join(xdg.ConfigHome, "bssh"))
-		v.AddConfigPath("/etc/bssh")
+		v.AddConfigPath(filepath.Join(xdg.ConfigHome, "adfssh"))
+		v.AddConfigPath("/etc/adfssh")
 	}
 
 	if err := v.ReadInConfig(); err != nil {
@@ -93,7 +93,7 @@ func setDefaults(v *viper.Viper) {
 
 func validateConfig(c *Config) error {
 	if c == nil {
-		return fmt.Errorf("missing bssh config")
+		return fmt.Errorf("missing adfssh config")
 	}
 
 	if c.Username == "" {

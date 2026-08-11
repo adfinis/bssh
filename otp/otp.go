@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	bastion "github.com/adfinis/bastion-go"
-	"github.com/adfinis/bssh/config"
+	"github.com/adfinis/adfssh/config"
 )
 
 // NewCallback returns a function that executes the configured OTP shell command
