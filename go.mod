@@ -6,7 +6,7 @@ require (
 	github.com/adfinis/bastion-go v0.5.0
 	github.com/adrg/xdg v0.5.3
 	github.com/charmbracelet/fang v1.0.0
-	github.com/charmbracelet/log v1.0.0
+	github.com/charmbracelet/log/v2 v2.0.0
 	github.com/creack/pty v1.1.24
 	github.com/openbao/openbao/api/v2 v2.6.0
 	github.com/samber/lo v1.53.0
