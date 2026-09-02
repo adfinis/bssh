@@ -1,4 +1,4 @@
-module github.com/adfinis/bssh
+module github.com/adfinis/adfssh
 
 go 1.25.6
 

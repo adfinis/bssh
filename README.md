@@ -1,6 +1,9 @@
-# BSSH
+# adfssh
 
 SSH for The Bastion with fancy autocompletion and OTP callback support.
+
+> **Note:** this project was previously called `bssh` and was renamed to
+> `adfssh` to avoid a name clash with the `bssh` tool shipped by avahi.
 
 ## Build / Install
 
@@ -12,7 +15,7 @@ go build .
 go install .
 
 # Arch (btw):
-yay -S bssh-bin
+yay -S adfssh-bin
 
 # Other linux distros might find a more suitable solution in the release tab of this repository
 ```
@@ -20,18 +23,18 @@ yay -S bssh-bin
 ## Usage
 
 ```
-bssh [flags] -- <command>
+adfssh [flags] -- <command>
 ```
 
 ## Configuration
 
-bssh looks for a `config.yml` file in the following locations (in order):
+adfssh looks for a `config.yml` file in the following locations (in order):
 
 1. Current directory (`.`)
-2. `$XDG_CONFIG_HOME/bssh/`
-3. `/etc/bssh/`
+2. `$XDG_CONFIG_HOME/adfssh/`
+3. `/etc/adfssh/`
 
-All config values can be overridden with environment variables using the `BSSH_` prefix (e.g. `BSSH_USERNAME`).
+All config values can be overridden with environment variables using the `ADFSSH_` prefix (e.g. `ADFSSH_USERNAME`).
 
 ### Options
 
@@ -66,7 +69,7 @@ otp_callback_command: ykman oath accounts code "Bastion" | cut -d" " -f3
 
 ### OpenBao certificate example
 
-When `openbao.enabled` is set, bssh asks the OpenBao SSH secrets engine to sign
+When `openbao.enabled` is set, adfssh asks the OpenBao SSH secrets engine to sign
 the configured public key and logs in to the bastion with the resulting
 short-lived certificate (passed to `ssh` via `CertificateFile`/`IdentityFile`).
 

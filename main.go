@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/adfinis/bssh/config"
-	"github.com/adfinis/bssh/openbao"
-	"github.com/adfinis/bssh/otp"
+	"github.com/adfinis/adfssh/config"
+	"github.com/adfinis/adfssh/openbao"
+	"github.com/adfinis/adfssh/otp"
 	"github.com/charmbracelet/fang"
 	"github.com/charmbracelet/log"
 	"github.com/creack/pty"
@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	// Version is the current version of bssh.
+	// Version is the current version of adfssh.
 	Version = "devel"
 	// Commit is the git commit hash of the current version.
 	Commit = "none"
@@ -39,7 +39,7 @@ var rootCmdFlags struct {
 }
 
 var rootCmd = &cobra.Command{
-	Use:                "bssh [flags] [host] [-- extra-ssh-args...]",
+	Use:                "adfssh [flags] [host] [-- extra-ssh-args...]",
 	Short:              "SSH for The Bastion with fancy autocompletion and OTP callback support",
 	Args:               cobra.ArbitraryArgs,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
