@@ -1,6 +1,8 @@
 ---
 version: 2
 
+project_name: adfssh
+
 before:
   hooks:
     - go mod tidy
@@ -18,7 +20,7 @@ builds:
     env:
       - CGO_ENABLED=0
     main: .
-    binary: bssh
+    binary: adfssh
     ldflags:
       - -s
       - -w
@@ -35,7 +37,7 @@ builds:
 
 archives:
   - id: default
-    name_template: "bssh-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}-{{ .Mips }}{{ end }}"
+    name_template: "adfssh-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}-{{ .Mips }}{{ end }}"
     ids:
       - default
     wrap_in_directory: true
@@ -49,11 +51,11 @@ checksum:
   name_template: "checksums.txt"
 
 nfpms:
-  - file_name_template: "bssh-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}-{{ .Mips }}{{ end }}"
+  - file_name_template: "adfssh-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}-{{ .Mips }}{{ end }}"
     vendor: adfinis
-    homepage: "https://github.com/adfinis/bssh"
+    homepage: "https://github.com/adfinis/adfssh"
     maintainer: "jonahz <jonah.zuercher@adfinis.com>"
-    description: "SSH client for the Bastion"
+    description: "Adfinis SSH client for the Bastion"
     license: "GPLv3"
     formats:
       - deb
@@ -61,6 +63,10 @@ nfpms:
       - archlinux
     dependencies:
       - openssh-client
+    replaces:
+      - bssh
+    conflicts:
+      - bssh
     contents:
       - src: ./completions/{{ .ProjectName }}.bash
         dst: /etc/bash_completion.d/{{ .ProjectName }}
@@ -79,14 +85,19 @@ nfpms:
           - openssh
 
 aurs:
-  - name: "bssh-bin"
-    homepage: "https://github.com/adfinis/bssh"
-    description: "SSH client for the Bastion"
+  - name: "adfssh-bin"
+    homepage: "https://github.com/adfinis/adfssh"
+    description: "Adfinis SSH client for the Bastion"
     maintainers:
       - "jonahz <jonah.zuercher@adfinis.com>"
     license: "GPL3"
     private_key: "{{ .Env.AUR_KEY }}"
-    git_url: "ssh://aur@aur.archlinux.org/bssh-bin.git"
+    git_url: "ssh://aur@aur.archlinux.org/adfssh-bin.git"
+    provides:
+      - adfssh
+    conflicts:
+      - adfssh
+      - bssh-bin
     depends:
       - openssh
     package: |-

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/adfinis/bastion-go"
-	"github.com/adfinis/bssh/config"
-	"github.com/adfinis/bssh/openbao"
-	"github.com/adfinis/bssh/otp"
+	"github.com/adfinis/adfssh/config"
+	"github.com/adfinis/adfssh/openbao"
+	"github.com/adfinis/adfssh/otp"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )

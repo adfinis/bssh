@@ -3,7 +3,7 @@ package otp
 import (
 	"testing"
 
-	"github.com/adfinis/bssh/config"
+	"github.com/adfinis/adfssh/config"
 	"github.com/stretchr/testify/assert"
 )
 

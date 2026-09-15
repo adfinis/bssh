@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	bastion "github.com/adfinis/bastion-go"
-	"github.com/adfinis/bssh/config"
+	"github.com/adfinis/adfssh/config"
 	bao "github.com/openbao/openbao/api/v2"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -75,7 +75,7 @@ func (s *SignedCert) Write(cfg *config.Config) (string, func(), error) {
 		return path, func() {}, nil
 	}
 
-	f, err := os.CreateTemp("", "bssh-cert-*.pub")
+	f, err := os.CreateTemp("", "adfssh-cert-*.pub")
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to create temporary certificate file: %w", err)
 	}
