@@ -12,11 +12,11 @@ import (
 	"syscall"
 	"time"
 
+	"charm.land/fang/v2"
+	"charm.land/log/v2"
 	"github.com/adfinis/bssh/config"
 	"github.com/adfinis/bssh/openbao"
 	"github.com/adfinis/bssh/otp"
-	"github.com/charmbracelet/fang"
-	"github.com/charmbracelet/log"
 	"github.com/creack/pty"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
