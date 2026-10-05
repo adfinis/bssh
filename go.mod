@@ -8,7 +8,7 @@ require (
 	github.com/adfinis/bastion-go v0.5.1
 	github.com/adrg/xdg v0.5.3
 	github.com/creack/pty v1.1.24
-	github.com/openbao/openbao/api/v2 v2.7.0
+	github.com/openbao/openbao/api/v2 v2.7.1
 	github.com/samber/lo v1.53.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
